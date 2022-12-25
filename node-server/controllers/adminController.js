@@ -56,39 +56,40 @@ const handleAdminLogin = async(req,res) =>{
  * Method for add the new Contacts from admin log in
  */
 const addContacts = async (req,res) =>{  
-    const errors = validationResult(req);
+   
+    const errors = validationResult(req);    
 	if (!errors.isEmpty()) {
     // console.log(errors.errors);
     return res.status(422).json({ errors: errors.errors[0]['msg'] }); // Response the Validation Error wile Adding New Contacts
   } 
-    
-    const {firstname,lastname,dob,email,phone,occupation,company,password} = req.body; // Object Destructing from request Body
+   console.log(req.body)
+    const {Name, State, City, Profile, Password,Email,Mobile,Description} = req.body; // Object Destructing from request Body
 
      // check duplicate
-     const findDuplicatesInMail = usersDb.users.find(person => person.email === email);
+     const findDuplicatesInMail = usersDb.users.find(person => person.Email === Email);
      if (findDuplicatesInMail) return res.status(409).json({ "error": 'email already exists' }) // Checking email Id already existing from Contact JSON
 
-     const findDuplicatesInPhone = usersDb.users.find(person => person.phone === phone);
-     if (findDuplicatesInPhone) return res.status(409).json({ "error": 'Phone no already exists' }) // Checking Phone no already existing from Contact JSON
+     const findDuplicatesInPhone = usersDb.users.find(person => person.Mobile === Mobile);
+     if (findDuplicatesInPhone) return res.status(409).json({ "error": 'Mobile no already exists' }) // Checking Phone no already existing from Contact JSON
    
      try {
         //hash the password       
       
         var salt = bcrypt.genSaltSync(5);
-        var hashPwd = bcrypt.hashSync(password, salt);
+        var hashPwd = bcrypt.hashSync(Password, salt);
         //console.log(hash);
        // //create the new users contacts 
-        const createUsers = {
-            firstName:firstname,
-            lastName:lastname,
-            dob:dob,
-            email:email,
-            phone:phone,
-            occupation:occupation,
-            company:company,
-            password:hashPwd
+        const createUsers = {          
+            "Profile": Name,
+            "Name": Name,
+            "Email": Email,
+            "Mobile": Mobile,
+            "State": State,
+            "City": City,
+            "Password": hashPwd,
+            "Description":Description
            }
-         
+         console.log(createUsers)
         usersDb.setusers([...usersDb.users, createUsers]) // update the users objects
 
         //write to the database
@@ -98,7 +99,7 @@ const addContacts = async (req,res) =>{
             JSON.stringify(usersDb.users)
         );
         //console.log(usersDb.users);
-        res.status(201).json({ "message": `New Contact ${firstname} ${lastname} is Added` }) // response for success adding new contacts
+        res.status(201).json({ SuccessCode: 1000,"message": `New User ${Name} is Added` }) // response for success adding new contacts
     } catch (err) {
         res.status(500).json({ 'error': err.message })
     }

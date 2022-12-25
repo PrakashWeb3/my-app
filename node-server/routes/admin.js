@@ -27,6 +27,14 @@ router.post('/',  AdminController.handleAdminLogin);
  * Admin user add the contacts using /addContact route
  * middleware is check admin credentials and Contact details validation
  */
+router.post('/addcontact', [ Validation.ValidateUser], AdminController.addContacts);
+
+/**
+ * Admin user list the contacts using /addContact route
+ * middleware is check admin credentials and Contact details validation
+ */
 router.get('/dashboard', [ JWTToken.verifyJWTToken , Validation.ValidateUser], AdminController.getContacts);
+
+
 
 module.exports = router;

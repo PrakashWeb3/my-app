@@ -1,7 +1,10 @@
-import React,{useState,useEffect} from "react";
+import React,{useState,useEffect,useRef} from "react";
 import {  Outlet, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import States from '../Data/states.json';
+import ReactToPrint from 'react-to-print';
+
+
 export const LayOut = () => {
   let isAdmin,LoginUser,LoggedIn;
 if(localStorage.getItem('token')){
@@ -166,7 +169,33 @@ export const Registration = () => {
   
 
   const { register, handleSubmit, formState: { errors } } = useForm();
-  const onSubmit = data => console.log(data);
+  const [errorMsg,SeterrorMsg] = useState('');
+  const onSubmit = async(data) => {
+    console.log(data);
+    let res ;
+    try{
+      res = await fetch("http://127.0.0.1:5000/admin/addcontact", {
+          method: "POST",       
+          body: JSON.stringify(data),
+          headers: { 'Content-Type': 'application/json' }
+      }).then((res) => res.json());
+      if(res.error)  SeterrorMsg('Error in saving');
+      if(res.SuccessCode == 1000) {  
+        SeterrorMsg('Saved successfully');      
+        //redirect user to home page
+        window.location.href = '/register'
+        
+      }
+      
+            
+    }catch(e){
+      SeterrorMsg('Error in Connectivity');
+      return
+    }finally{
+
+    }
+  }
+ 
   //console.log(errors);
   const [data, setData] = useState("");
   const [city,setcityList] = useState([]);
@@ -199,7 +228,12 @@ export const Registration = () => {
   return (
     <div className="form-register w-100 m-auto">
       <h1 className="h3 mb-3 fw-normal">Registration Form</h1>
-      <form  onSubmit={handleSubmit(onSubmit)}>
+          { errorMsg &&
+                  <div className="alert alert-danger" role="alert">
+            {errorMsg}          </div>
+          }
+            
+      <form  onSubmit={handleSubmit(onSubmit)} encType='multipart/form-data'>
         <div className="row mb-3">
           <label htmlFor="inputName" className="col-sm-2 col-form-label">
             Name *
@@ -213,7 +247,7 @@ export const Registration = () => {
             Mobile *
           </label>
           <div className="col-sm-10">
-            <input type="number" className="form-control" id="inputMobile" {...register("Mobile", {required: true, maxLength: 10})}/>
+            <input type="number" className="form-control" id="inputMobile" {...register("Mobile", {required: true, maxLength: 10 ,minLength: 10})}/>
           </div>
         </div>
         <div className="row mb-3">
@@ -286,7 +320,7 @@ export const Registration = () => {
             Image *
           </label>
           <div className="col-sm-10">
-            <input type="file" className="form-control" id="inputFile" {...register("Profile", {required: true})} />
+            <input type="file" className="form-control" id="inputFile" accept="image/png, image/gif, image/jpeg"  {...register("Profile", {required: true})} />
           </div>
         </div>
 
@@ -344,10 +378,18 @@ export const Dashboard = () => {
   const getHeadings = () => {
         return ["Profile","Name", "Email", "Mobile","State","City","Description"]
     }
+    let componentRef = useRef();
   return (
     <div>
       <h2>Dashboard</h2>
       <div className="container">
+        <ReactToPrint
+          trigger={() => <span className="text-center"><button>Export to PDF</button></span>}
+          content={() => componentRef}
+        />
+      </div>
+      
+      <div className="container" ref={(el) => (componentRef = el)}>
       <Table theadData={getHeadings()} tbodyData={loadUsers}/>
     </div>
     </div>
