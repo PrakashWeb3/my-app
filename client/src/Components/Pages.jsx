@@ -1,8 +1,28 @@
-import React from "react";
+import React,{useState,useEffect} from "react";
 import {  Outlet, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 
 export const LayOut = () => {
+  let isAdmin,LoginUser,LoggedIn;
+if(localStorage.getItem('token')){
+  LoggedIn=true;
+  let localToken = localStorage.getItem('token'); 
+   // check Admin or Not
+   isAdmin = JSON.parse(atob(localToken.split('.')[1])).role === 'admin';
+  if(!isAdmin){
+   LoginUser = JSON.parse(atob(localToken.split('.')[1])).username;
+  }
+}
+const renderAuthButton = () => {
+  if (LoggedIn) {
+    if(isAdmin)  return <span>User: Admin <a href="/logout">Logout</a></span>;
+    return <span>User:  {LoginUser} <a href="/logout">Logout</a></span>;
+  } else {
+    return <span><a href="/register">Register</a> &nbsp; <a href="/">Login</a></span>;
+  }
+}
+
+
   return (
     <div>
       {/* A "layout route" is a good place to put markup you want to
@@ -19,7 +39,7 @@ export const LayOut = () => {
             />
           </a>
           <ul className="navbar-nav me-auto mb-2 mb-lg-0 d-flex flex-row">
-            <li className="p-2 nav-item">
+           {/* <li className="p-2 nav-item">
               <Link className="nav-link" to="/">
                 Home
               </Link>
@@ -28,20 +48,28 @@ export const LayOut = () => {
               <Link className="nav-link" to="/register">
                 Register
               </Link>
-            </li>
+            </li> */}
+            { LoggedIn && 
+            <>
             <li className="p-2 nav-item">
-              <Link className="nav-link" to="/about">
-                About
-              </Link>
+                      <Link className="nav-link" to="/about">
+                        About
+                      </Link>
+                    </li>
+                    <li className="p-2 nav-item">
+                      <Link className="nav-link" to="/dashboard">
+                        Dashboard
+                      </Link>
             </li>
-            <li className="p-2 nav-item">
-              <Link className="nav-link" to="/dashboard">
-                Dashboard
-              </Link>
-            </li>
+            </>  
+          }
           </ul>
-        </div>
-        <span className="navbar-text">Login User</span>
+        </div>        
+        <span className="navbar-text">
+          {
+          renderAuthButton()
+          }       
+        </span>
       </nav>
 
       {/* An <Outlet> renders whatever child route is currently active,
@@ -53,25 +81,46 @@ export const LayOut = () => {
 };
 
 export const Home = (props) => {
-
+  const [errorMsg,SeterrorMsg] = useState('');
   const { register, handleSubmit, watch, formState: { errors } } = useForm();
   //const onSubmit = data => console.log(data);
   //console.log(errors);
   //console.log(watch());
-
+  if(localStorage.getItem("token")){
+    window.location.href='/dashboard';
+  }
   const onSubmit = async (data) => {
     //const formData = new FormData();
     //formData.append("file", data.file[0]);
     console.log(data);
-    const res = await fetch("http://127.0.0.1:5000/admin", {
-        method: "POST",
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(data),
-    }).then((res) => res.json());
-    alert(JSON.stringify(`${res.message}, status: ${res.status}`));
+    let res ;
+    try{
+      res = await fetch("http://127.0.0.1:5000/admin", {
+          method: "POST",
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(data),
+      }).then((res) => res.json());
+
+      if(res.SuccessCode == 1000) {
+        //set JWT token to local
+        localStorage.setItem("token", res.webtoken);
+        //redirect user to home page
+        window.location.href = '/dashboard'
+        SeterrorMsg('Redirecting...');
+      }
+      
+            
+    }catch(e){
+      SeterrorMsg('Error in Connectivity');
+      return
+    }finally{
+
+    }
+
+    //alert(JSON.stringify(`${res.message}, status: ${res.status}`));
 };
 
   return (
@@ -103,6 +152,7 @@ export const Home = (props) => {
           <button className="w-100 btn btn-lg btn-primary" type="submit">
             Sign in
           </button>
+          <span className="form-text text-danger">{errorMsg}</span>
         </div>
       </form>
     </div>
@@ -213,11 +263,49 @@ export const About = () => {
     </div>
   );
 };
-
+export const Logout = () => {
+  localStorage.clear();
+  window.location.href = '/';
+  return
+};
 export const Dashboard = () => {
+  const [loadUsers, setUsers] = useState([]);
+  useEffect(()=>{
+    async function LoadData () {
+          const datas = await fetch("http://127.0.0.1:5000/admin/dashboard", {
+          method: "GET",
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'x-access-token':localStorage.getItem('token')
+          },
+      }).then((res) => res.json());
+
+      if(datas.errorCode == 4004 || datas.errorCode==4003){
+        localStorage.setItem('token','');
+        alert('Authentication Error! Login Again')
+        window.location.href='/';
+        return
+      }      
+      else{
+        setUsers(datas.data)
+      }
+  console.log(datas);
+    }
+  LoadData();
+ 
+
+  },[])
+
+  const getHeadings = () => {
+        return ["Profile","Name", "Email", "Mobile","State","City","Description"]
+    }
   return (
     <div>
       <h2>Dashboard</h2>
+      <div className="container">
+      <Table theadData={getHeadings()} tbodyData={loadUsers}/>
+    </div>
     </div>
   );
 };
@@ -232,3 +320,26 @@ export const NotFound = () => {
     </div>
   );
 };
+
+const Table = ({ theadData, tbodyData }) => {
+  return (
+    <table className="table table-bordered">
+      <thead>
+        <tr>
+          {theadData.map(heading => {
+            return <th key={heading}>{heading}</th>
+          })}
+        </tr>
+      </thead>
+      <tbody>
+        {tbodyData.map((row, index) => {
+          return <tr key={index}>
+            {theadData.map((key, index) => {
+              return <td key={row[key]}>{row[key]}</td>
+            })}
+          </tr>;
+        })}
+      </tbody>
+    </table>
+  );
+}

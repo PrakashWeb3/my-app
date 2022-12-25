@@ -8,10 +8,10 @@ require('dotenv').config();
 const verifyJWTToken = (req, res, next) => {
    
     const token =
-    req.body.token || req.query.token || req.headers["token"] || req.headers.authorization || req.headers.Authorization;
+    req.body.token || req.query.token || req.headers["token"] || req.headers.authorization || req.headers.Authorization || req.headers["x-access-token"];
 
     if (!token) {
-        return res.status(403).json({error:"A token is required for authentication"});
+        return res.status(403).json({error:"A token is required for authentication",errorCode:4003});
     }
     
     let tokenData = token.replace(/^Bearer\s+/, "");
@@ -20,7 +20,7 @@ const verifyJWTToken = (req, res, next) => {
         const decoded = jwt.verify(tokenData, process.env.ACCESS_SECRET_KEY);
         req.email = decoded.email; 
       } catch (err) {
-        return res.status(401).json({error: 'InValid Token'});
+        return res.status(401).json({error: 'InValid Token',errorCode:4004});
       }
       return next();
 }
@@ -31,7 +31,7 @@ const verifyJWTToken = (req, res, next) => {
 const removeJWTToken = (req, res, next) => {
 
   const token =
-  req.body.token || req.query.token || req.headers["token"] || req.headers.authorization || req.headers.Authorization;
+  req.body.token || req.query.token || req.headers["token"] || req.headers.authorization || req.headers.Authorization || req.headers["x-access-token"];
 
   if (!token) {
       return res.status(200).json({message:"Logged out successfully"});

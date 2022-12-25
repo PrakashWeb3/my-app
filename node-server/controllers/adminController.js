@@ -30,12 +30,22 @@ const handleAdminLogin = async(req,res) =>{
     }  
 
     if(AdminAuthorize(email, password )){
-        const token = jwt.sign({username:email,role:'admin'},process.env.ACCESS_SECRET_KEY,{expiresIn:'1h'}); // JWT sign for admin user
-        //res.cookie('token',token);
-        /**
-         * you can set 3rd param as cookie options eg. { httpOnly: true, secure: true, maxAge: 24 * 60 * 60 * 1000 }
-         */
-        res.status(200).json({status:'you are logged in Admin Role',api:'use /addContact route to add contacts',webtoken:token}); // response with success message and token
+        let token;
+        try {
+            token = jwt.sign({username:email,role:'admin'},process.env.ACCESS_SECRET_KEY,{expiresIn:'1h'}); // JWT sign for admin user
+            //res.cookie('token',token);
+            /**
+             * you can set 3rd param as cookie options eg. { httpOnly: true, secure: true, maxAge: 24 * 60 * 60 * 1000 }
+             */
+            res.setHeader('x-access-token', token);
+            
+            res.status(200).json({status:'you are logged in Admin Role',api:'use /dashboard route to add users',webtoken:token, SuccessCode:1000}); // response with success message and token
+            //res.status(301).redirect('/dashboard'); 
+        } catch (error) {
+            return res.status(403).json({ errorCode: 4,Message:error.message }) // Check Valid Admin Credentials
+        }
+
+       
     }else{
         res.status(403).json({error:'admin credential is not satisfied'});
     }
@@ -94,4 +104,20 @@ const addContacts = async (req,res) =>{
     }
     
 }
-module.exports = { handleAdminLogin,addContacts }
+
+/**
+ * Method for get the new Contacts from admin log in
+ */
+const getContacts = async (req,res) =>{  
+    
+     try {
+       
+        
+        //console.log(usersDb.users);
+        res.status(201).json({ "data": usersDb.users,SuccessCode:1001 }) // response for success adding new contacts
+    } catch (err) {
+        res.status(500).json({ 'error': err.message })
+    }
+    
+}
+module.exports = { handleAdminLogin,addContacts,getContacts }

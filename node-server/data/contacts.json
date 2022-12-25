@@ -1,1 +1,23 @@
-[{"firstName":"testUser","lastName":"a","email":"test123@gmail.com","phone":"9944752600","occupation":"devops","company":"hcl tech","password":"$2a$05$vRUA3/5j.LvKJ8t0Gg930urShlepz5vYPexIbXWDjJFJKGvLTlP6q"},{"firstName":"testUserNew","lastName":"AB","email":"test12345@gmail.com","phone":"9944752601","occupation":"devops","company":"hcl technology","password":"$2a$05$tINXO4euj1uelMVyJm4HROv68mRJL4d6.hbXeQxoGQij3bC9R8UR."}]
+[
+    {
+        "Profile": "testUser",
+        "Name": "a",
+        "Email": "test123@gmail.com",
+        "Mobile": "9944752600",
+        "State": "devops",
+        "City": "hcl tech",
+        "Password": "$2a$05$vRUA3/5j.LvKJ8t0Gg930urShlepz5vYPexIbXWDjJFJKGvLTlP6q",
+        "Description":"Remarks"
+    },
+    {
+        "Profile": "testUserNew",
+        "Name":"AB",
+        "Email": "test12345@gmail.com",
+        "Mobile": "9944752601",
+        "State": "devops sfsd",
+        "City": "hcl technology",
+        "Password": "$2a$05$tINXO4euj1uelMVyJm4HROv68mRJL4d6.hbXeQxoGQij3bC9R8UR.",
+        "Description":"Remarks"
+
+    }
+]
