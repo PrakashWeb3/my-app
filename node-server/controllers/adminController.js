@@ -17,20 +17,20 @@ const usersDb = {
  * We can get from .ENV file
  */
 const AdminAuthorize = function(user,pwd){
-    return user =='Admin' && pwd == 123;
+    return user =='Admin@gmail.com' && pwd == 123;
 }
 /**
  * Method for Handling the Admin Login
  */
 const handleAdminLogin = async(req,res) =>{
-    
-    const { user, pwd } = req.body; // Destructing the request Data
-    if (!user || !pwd) {
+    console.log(req.body);
+    const { email, password } = req.body; // Destructing the request Data
+    if (!email || !password) {
         return res.status(400).json({ error: "username and password are required" }) // Check Valid Admin Credentials
     }  
 
-    if(AdminAuthorize(user,pwd)){
-        const token = jwt.sign({username:user,role:'admin'},process.env.ACCESS_SECRET_KEY,{expiresIn:'1h'}); // JWT sign for admin user
+    if(AdminAuthorize(email, password )){
+        const token = jwt.sign({username:email,role:'admin'},process.env.ACCESS_SECRET_KEY,{expiresIn:'1h'}); // JWT sign for admin user
         //res.cookie('token',token);
         /**
          * you can set 3rd param as cookie options eg. { httpOnly: true, secure: true, maxAge: 24 * 60 * 60 * 1000 }
