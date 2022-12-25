@@ -1,7 +1,7 @@
 import React,{useState,useEffect} from "react";
 import {  Outlet, Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
-
+import States from '../Data/states.json';
 export const LayOut = () => {
   let isAdmin,LoginUser,LoggedIn;
 if(localStorage.getItem('token')){
@@ -163,36 +163,69 @@ Home.defaultProps = {
   method: 'post'
 };
 export const Registration = () => {
+  
+
+  const { register, handleSubmit, formState: { errors } } = useForm();
+  const onSubmit = data => console.log(data);
+  //console.log(errors);
+  const [data, setData] = useState("");
+  const [city,setcityList] = useState([]);
+
+  const loadOptions = () => {
+    let StateList = [...new Set(States.map(state => state.state))];
+    //console.log(StateList);
+    const options = StateList.map((state,i)=>{
+       return <option   key={i} value={state}>{state}</option>
+      })
+    
+    return options;
+  }
+  useEffect(() => {   
+    //console.log(city);
+}, [city]);
+  const loadOptionsCity = (Sltstate) => {
+    
+      let CityList = [...new Set(States.filter(state => state.state == Sltstate))];
+        let CityRow = CityList.map(state => state.name)
+      //  console.log(CityRow);
+      setcityList(CityRow);
+
+  }
+  const loadCity = (e)=>{
+    //console.log(e.target.value);
+    loadOptionsCity(e.target.value)
+
+  }
   return (
     <div className="form-register w-100 m-auto">
       <h1 className="h3 mb-3 fw-normal">Registration Form</h1>
-      <form>
+      <form  onSubmit={handleSubmit(onSubmit)}>
         <div className="row mb-3">
-          <label for="inputName" className="col-sm-2 col-form-label">
+          <label htmlFor="inputName" className="col-sm-2 col-form-label">
             Name *
           </label>
           <div className="col-sm-10">
-            <input type="text" className="form-control" id="inputName" />
+            <input type="text" className="form-control" id="inputName" {...register("Name", {required: true, maxLength: 30})} />
           </div>
         </div>
         <div className="row mb-3">
-          <label for="inputMobile" className="col-sm-2 col-form-label">
+          <label htmlFor="inputMobile" className="col-sm-2 col-form-label">
             Mobile *
           </label>
           <div className="col-sm-10">
-            <input type="number" className="form-control" id="inputMobile" />
+            <input type="number" className="form-control" id="inputMobile" {...register("Mobile", {required: true, maxLength: 10})}/>
           </div>
         </div>
         <div className="row mb-3">
-          <label for="inputEmail" className="col-sm-2 col-form-label">
+          <label htmlFor="inputEmail" className="col-sm-2 col-form-label">
             Email *
           </label>
           <div className="col-sm-10">
-            <input type="email" className="form-control" id="inputEmail" />
+            <input type="email" className="form-control" id="inputEmail" {...register("Email", {required: true,pattern: /^\S+@\S+$/i})} />
           </div>
         </div>
         <div className="row mb-3">
-          <label for="inputPassword" className="col-sm-2 col-form-label">
+          <label htmlFor="inputPassword" className="col-sm-2 col-form-label">
             Password *
           </label>
           <div className="col-sm-10">
@@ -200,31 +233,41 @@ export const Registration = () => {
               type="password"
               className="form-control"
               id="inputPassword"
+              {...register("Password", {required: true})}
             />
           </div>
         </div>
         <div className="row mb-3">
-          <label for="inputState" className="col-sm-2 col-form-label">
+          <label htmlFor="inputState" className="col-sm-2 col-form-label">
             State *
           </label>
           <div className="col-sm-10">
-            <select className="form-control" id="inputState">
+            <select className="form-control" id="inputState" {...register("State", {required: true})} onChange={(loadCity)} >
               <option value="">Choose the State</option>
+              {
+                loadOptions()
+              }
             </select>
           </div>
         </div>
         <div className="row mb-3">
-          <label for="inputCity" className="col-sm-2 col-form-label">
+          <label htmlFor="inputCity" className="col-sm-2 col-form-label">
             City *
           </label>
           <div className="col-sm-10">
-            <select className="form-control" id="inputCity">
+            <select className="form-control" id="inputCity" {...register("City", {required: true})} >
               <option value="">Choose the City</option>
+              { 
+                city.map((city,i)=>{
+                  return <option   key={i} value={city}>{city}</option>
+                 })
+                
+              }              
             </select>
           </div>
         </div>
         <div className="row mb-3">
-          <label for="inputDesc" className="col-sm-2 col-form-label">
+          <label htmlFor="inputDesc" className="col-sm-2 col-form-label">
             Description
           </label>
           <div className="col-sm-10">
@@ -234,15 +277,16 @@ export const Registration = () => {
               id="inputDesc"
               row="5"
               col="6"
+              {...register("Description", {required: true, maxLength: 50})}
             ></textarea>
           </div>
         </div>
         <div className="row mb-3">
-          <label for="inputFile" className="col-sm-2 col-form-label">
+          <label htmlFor="inputFile" className="col-sm-2 col-form-label" >
             Image *
           </label>
           <div className="col-sm-10">
-            <input type="file" className="form-control" id="inputFile" />
+            <input type="file" className="form-control" id="inputFile" {...register("Profile", {required: true})} />
           </div>
         </div>
 
@@ -281,7 +325,7 @@ export const Dashboard = () => {
           },
       }).then((res) => res.json());
 
-      if(datas.errorCode == 4004 || datas.errorCode==4003){
+      if(datas.errorCode === 4004 || datas.errorCode===4003){
         localStorage.setItem('token','');
         alert('Authentication Error! Login Again')
         window.location.href='/';
